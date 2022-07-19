@@ -11,7 +11,7 @@ import (
 func main() {
 	log.Print("simplehttp: Enter main()")
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe("0.0.0.0:8000", nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:80", nil))
 }
 
 // printing request headers/params
