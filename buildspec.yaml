@@ -1,6 +1,6 @@
 ---
 version: 0.2
-env:
+#env:
   # variables:
   #   PRISMA_CONSOLE: "${PRISMA_CONSOLE}"
   #   JFROG_NP_REPO_HOST: "${JFROG_NP_REPO_HOST}"
