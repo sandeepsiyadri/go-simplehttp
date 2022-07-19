@@ -1,0 +1,58 @@
+---
+version: 0.2
+env:
+  # variables:
+  #   PRISMA_CONSOLE: "${PRISMA_CONSOLE}"
+  #   JFROG_NP_REPO_HOST: "${JFROG_NP_REPO_HOST}"
+  #   BASE_IMAGE_URL: "${BASE_IMAGE_URL}"
+  #   APP_DIRECTORY: "${APP_DIRECTORY}"
+  #   APP_NAME: "${APP_NAME}"
+  # parameter-store:
+  #   PRISMA_KEY_ID: "${PRISMA_KEY_ID}"
+  #   PRISMA_SECRET: "${PRISMA_SECRET}"
+  #   JFROG_USERID: "${JFROG_USERID}"
+  #   JFROG_ACCESS_TOKEN: "${JFROG_ACCESS_TOKEN}"
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - echo $AWS_DEFAULT_REGION
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - REPOSITORY_URI=434620312578.dkr.ecr.us-east-1.amazonaws.com/go-app
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      #- cd apps/go-app/
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing definitions file...
+      - printf '[{"name":"go-ecs-container","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+      #- printf '{"ImageURI":"$REPOSITORY_URI:$IMAGE_TAG"}' > imageDetail.json
+      #- printf '{"ImageURI":"%s"}' $REPOSITORY_URI:latest > imageDetail.json
+      - cat imagedefinitions.json
+      #- cp imagedefinitions.json ../../
+      - echo `ls -l imagedefinitions.json`
+      - echo `pwd`
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - 'image*.json'
+    #- 'apps/go-app/appspec.yaml'
+    #- 'apps/go-app/taskdef.json'
+  #secondary-artifacts:
+    #DefinitionArtifact:
+      #files:
+       # - apps/go-app/appspec.yaml
+        #- apps/go-app/taskdef.json
+    #ImageArtifact:
+      #files:
+        #- imagedefinitions.json
